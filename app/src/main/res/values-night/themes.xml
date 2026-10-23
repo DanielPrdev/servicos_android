@@ -1,0 +1,24 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Servicos" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary Brand Colors -->
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorOnPrimary">@color/gray_900</item>
+        <item name="colorPrimaryContainer">@color/gray_700</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+
+        <!-- Secondary Colors -->
+        <item name="colorSecondary">@color/gray_400</item>
+        <item name="colorOnSecondary">@color/gray_900</item>
+
+        <!-- Background and Surface Colors -->
+        <item name="android:windowBackground">@color/gray_900</item>
+        <item name="colorSurface">@color/gray_900</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorSurfaceVariant">@color/gray_800</item>
+        <item name="colorOnSurfaceVariant">@color/gray_300</item>
+
+        <!-- Outlines and Dividers -->
+        <item name="colorOutline">@color/gray_600</item>
+    </style>
+</resources>
