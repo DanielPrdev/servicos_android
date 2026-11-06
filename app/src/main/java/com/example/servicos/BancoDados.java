@@ -34,7 +34,7 @@ public class BancoDados extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void inserir(Servico s) {
+    public long inserir(Servico s) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = new ContentValues();
         v.put("title", s.getTitle());
@@ -44,7 +44,7 @@ public class BancoDados extends SQLiteOpenHelper {
         v.put("client_name", s.getClientName());
         v.put("address", s.getAddress() != null ? s.getAddress() : "");
         v.put("price", s.getPrice());
-        db.insert("servicos", null, v);
+        return db.insert("servicos", null, v);
     }
 
     public void atualizar(Servico s) {

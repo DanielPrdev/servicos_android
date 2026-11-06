@@ -1,8 +1,11 @@
 package com.example.servicos;
 
+import android.Manifest;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -46,6 +49,12 @@ public class MainActivity extends AppCompatActivity implements ServicoAdapter.On
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -173,6 +182,9 @@ public class MainActivity extends AppCompatActivity implements ServicoAdapter.On
     private void loadServicos() {
         List<Servico> servicos = bancoDados.listar();
         servicoAdapter.setServicos(servicos);
+        for (Servico s : servicos) {
+            AlarmScheduler.scheduleAlarmForServico(this, s);
+        }
     }
 
     @Override
@@ -347,10 +359,13 @@ public class MainActivity extends AppCompatActivity implements ServicoAdapter.On
                 servicoToEdit.setTime(time);
                 servicoToEdit.setDescription(desc);
                 bancoDados.atualizar(servicoToEdit);
+                AlarmScheduler.scheduleAlarmForServico(MainActivity.this, servicoToEdit);
                 Toast.makeText(MainActivity.this, "Serviço atualizado", Toast.LENGTH_SHORT).show();
             } else {
                 Servico novo = new Servico(0, title, desc, date, time, clientName, address, price);
-                bancoDados.inserir(novo);
+                long newId = bancoDados.inserir(novo);
+                novo.setId(newId);
+                AlarmScheduler.scheduleAlarmForServico(MainActivity.this, novo);
                 Toast.makeText(MainActivity.this, "Serviço salvo", Toast.LENGTH_SHORT).show();
             }
 
