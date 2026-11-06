@@ -6,8 +6,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class BancoDados extends SQLiteOpenHelper {
 
@@ -84,6 +88,54 @@ public class BancoDados extends SQLiteOpenHelper {
             } while (c.moveToNext());
         }
         c.close();
+        ordenarServicos(lista);
         return lista;
+    }
+
+    private void ordenarServicos(List<Servico> servicos) {
+        if (servicos == null || servicos.isEmpty()) return;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.forLanguageTag("pt-BR"));
+        sdf.setLenient(false);
+        SimpleDateFormat sdfDateOnly = new SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR"));
+        sdfDateOnly.setLenient(false);
+
+        long now = System.currentTimeMillis();
+
+        Collections.sort(servicos, (s1, s2) -> {
+            long time1 = parseServicoTime(s1, sdf, sdfDateOnly);
+            long time2 = parseServicoTime(s2, sdf, sdfDateOnly);
+
+            boolean isPast1 = time1 < now;
+            boolean isPast2 = time2 < now;
+
+            if (isPast1 != isPast2) {
+                // Future/upcoming comes before past
+                return isPast1 ? 1 : -1;
+            }
+
+            // Both are future or both are past: closest to now first (ascending)
+            return Long.compare(time1, time2);
+        });
+    }
+
+    private long parseServicoTime(Servico s, SimpleDateFormat sdf, SimpleDateFormat sdfDateOnly) {
+        try {
+            String dateStr = s.getDate();
+            String timeStr = s.getTime();
+            if (dateStr == null) dateStr = "";
+            if (timeStr == null || timeStr.trim().isEmpty()) {
+                timeStr = "00:00";
+            }
+            String fullStr = dateStr.trim() + " " + timeStr.trim();
+            Date d = sdf.parse(fullStr);
+            if (d != null) return d.getTime();
+        } catch (Exception e) {
+            try {
+                Date d = sdfDateOnly.parse(s.getDate());
+                if (d != null) return d.getTime();
+            } catch (Exception ignored) {}
+        }
+        return Long.MAX_VALUE;
     }
 }
