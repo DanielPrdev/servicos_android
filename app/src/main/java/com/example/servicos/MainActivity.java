@@ -87,8 +87,51 @@ public class MainActivity extends AppCompatActivity implements ServicoAdapter.On
         if (item.getItemId() == R.id.action_share) {
             shareServicos();
             return true;
+        } else if (item.getItemId() == R.id.action_trash) {
+            showTrashOptionsDialog();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showTrashOptionsDialog() {
+        String[] options = {"Excluir serviços passados", "Excluir todos os serviços"};
+        new AlertDialog.Builder(this)
+                .setTitle("Gerenciar Lixeira")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        confirmDeletePastServicos();
+                    } else if (which == 1) {
+                        confirmDeleteAllServicos();
+                    }
+                })
+                .show();
+    }
+
+    private void confirmDeletePastServicos() {
+        new AlertDialog.Builder(this)
+                .setTitle("Excluir Passados")
+                .setMessage("Deseja realmente excluir todos os serviços cuja data/horário já passaram?")
+                .setPositiveButton("Excluir", (dialog, which) -> {
+                    bancoDados.excluirPassados();
+                    loadServicos();
+                    Toast.makeText(this, "Serviços passados excluídos", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void confirmDeleteAllServicos() {
+        new AlertDialog.Builder(this)
+                .setTitle("Excluir Todos")
+                .setMessage("Deseja realmente excluir TODOS os serviços cadastrados?")
+                .setPositiveButton("Excluir Todos", (dialog, which) -> {
+                    bancoDados.excluirTodos();
+                    loadServicos();
+                    Toast.makeText(this, "Todos os serviços foram excluídos", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 
     private void shareServicos() {
@@ -145,6 +188,19 @@ public class MainActivity extends AppCompatActivity implements ServicoAdapter.On
     @Override
     public void onDeleteClick(Servico servico) {
         confirmDeleteServico(servico);
+    }
+
+    private void confirmDeleteServico(Servico servico) {
+        new AlertDialog.Builder(this)
+                .setTitle("Excluir Serviço")
+                .setMessage("Deseja realmente excluir o serviço \"" + servico.getTitle() + "\"?")
+                .setPositiveButton("Excluir", (dialog, which) -> {
+                    bancoDados.excluir(servico.getId());
+                    loadServicos();
+                    Toast.makeText(this, "Serviço excluído", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 
     private void showServicoDetailDialog(Servico servico) {
@@ -271,14 +327,16 @@ public class MainActivity extends AppCompatActivity implements ServicoAdapter.On
                 tilTitle.setError(null);
             }
 
-            if (hasError) return;
-
-            double price = 0.0;
-            if (!TextUtils.isEmpty(priceStr)) {
-                try {
-                    price = Double.parseDouble(priceStr);
-                } catch (NumberFormatException ignored) {}
+            if (hasError) {
+                return;
             }
+
+            double price = 0;
+            try {
+                if (!TextUtils.isEmpty(priceStr)) {
+                    price = Double.parseDouble(priceStr);
+                }
+            } catch (NumberFormatException ignored) {}
 
             if (isEdit) {
                 servicoToEdit.setClientName(clientName);
@@ -289,29 +347,15 @@ public class MainActivity extends AppCompatActivity implements ServicoAdapter.On
                 servicoToEdit.setTime(time);
                 servicoToEdit.setDescription(desc);
                 bancoDados.atualizar(servicoToEdit);
-                Toast.makeText(MainActivity.this, "Serviço atualizado!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Serviço atualizado", Toast.LENGTH_SHORT).show();
             } else {
-                Servico newServico = new Servico(title, desc, date, time, clientName, address, price);
-                bancoDados.inserir(newServico);
-                Toast.makeText(MainActivity.this, "Serviço cadastrado!", Toast.LENGTH_SHORT).show();
+                Servico novo = new Servico(0, title, desc, date, time, clientName, address, price);
+                bancoDados.inserir(novo);
+                Toast.makeText(MainActivity.this, "Serviço salvo", Toast.LENGTH_SHORT).show();
             }
 
             loadServicos();
             dialog.dismiss();
         });
-    }
-
-    private void confirmDeleteServico(final Servico servico) {
-        String titleDisplay = TextUtils.isEmpty(servico.getClientName()) ? servico.getTitle() : servico.getClientName();
-        new AlertDialog.Builder(this)
-                .setTitle("Excluir Serviço")
-                .setMessage("Deseja realmente excluir o serviço de '" + titleDisplay + "'?")
-                .setPositiveButton("Excluir", (dialog, which) -> {
-                    bancoDados.excluir(servico.getId());
-                    loadServicos();
-                    Toast.makeText(MainActivity.this, "Serviço excluído", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
     }
 }

@@ -6,4 +6,10 @@
         android:icon="@android:drawable/ic_menu_share"
         android:title="Compartilhar"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_trash"
+        android:icon="@android:drawable/ic_menu_delete"
+        android:title="Limpar / Lixeira"
+        app:showAsAction="ifRoom" />
 </menu>

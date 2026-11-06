@@ -64,6 +64,33 @@ public class BancoDados extends SQLiteOpenHelper {
         getWritableDatabase().delete("servicos", "id = ?", new String[]{String.valueOf(id)});
     }
 
+    public void excluirTodos() {
+        getWritableDatabase().delete("servicos", null, null);
+    }
+
+    public void excluirPassados() {
+        List<Servico> servicos = listar();
+        long now = System.currentTimeMillis();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.forLanguageTag("pt-BR"));
+        sdf.setLenient(false);
+        SimpleDateFormat sdfDateOnly = new SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR"));
+        sdfDateOnly.setLenient(false);
+
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            for (Servico s : servicos) {
+                long time = parseServicoTime(s, sdf, sdfDateOnly);
+                if (time < now) {
+                    db.delete("servicos", "id = ?", new String[]{String.valueOf(s.getId())});
+                }
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     public List<Servico> listar() {
         List<Servico> lista = new ArrayList<>();
         Cursor c = getReadableDatabase().query("servicos", null, null, null, null, null, "id DESC");
@@ -110,11 +137,9 @@ public class BancoDados extends SQLiteOpenHelper {
             boolean isPast2 = time2 < now;
 
             if (isPast1 != isPast2) {
-                // Future/upcoming comes before past
                 return isPast1 ? 1 : -1;
             }
 
-            // Both are future or both are past: closest to now first (ascending)
             return Long.compare(time1, time2);
         });
     }
